@@ -1,0 +1,9 @@
+name: nat
+dependencies:
+- python=3.10
+- jupyter
+- tensorflow
+- pydot
+- networkx
+- matplotlib
+- numpy 
