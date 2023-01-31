@@ -17,16 +17,15 @@ class DiGraphModel(tf.keras.Model):
         self.unit_graph = None
         
     def get_networkx_graph(self):
-        if self.unit_graph == None: 
-            model_node_attributes = networkx.get_node_attributes(self.networkx_model_graph,'label')
-            self.unit_graph = networkx.DiGraph()
-            layer_types = {node_id:split('\{|\}|\|',label)[2] for node_id,label in model_node_attributes.items()}
-            
-            if 'InputLayer' in layer_types.values():
-                node_id = list(layer_types.keys())[list(layer_types.values()).index('InputLayer')]
-                self._construct_unit_graph(node_id)
-            else:
-                raise Exception('No InputLayer in Model')
+        model_node_attributes = networkx.get_node_attributes(self.networkx_model_graph,'label')
+        self.unit_graph = networkx.DiGraph()
+        layer_types = {node_id:split('\{|\}|\|',label)[2] for node_id,label in model_node_attributes.items()}
+        
+        if 'InputLayer' in layer_types.values():
+            node_id = list(layer_types.keys())[list(layer_types.values()).index('InputLayer')]
+            self._construct_unit_graph(node_id)
+        else:
+            raise Exception('No InputLayer in Model')
 
         return self.unit_graph
     
@@ -70,3 +69,37 @@ class DiGraphModel(tf.keras.Model):
             elif e.isdigit():
                 shape.append(int(e))
         return shape
+
+
+class KernelMask(tf.keras.constraints.Constraint):
+    """
+    Kernel constraint which allows for pruning kernel weights using
+    binary mask of zeros and ones.
+    """
+    def __init__(self,mask):
+        self.mask
+
+    def __call__(self, w):
+        return w * self.mask
+
+
+class UnitMask(tf.keras.layers.Layer):
+    """
+    Mask layer which applies binary mask to post activations in a network.
+    """
+    def __init__(self, **kwargs):
+        super(LambdaMask, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        # Create a trainable weight variable for this layer.
+        self.kernel = self.add_weight(name='kernel', 
+                                      shape=(1,) + input_shape[1:],
+                                      initializer=tf.keras.initializers.Ones(),
+                                      trainable=False)
+        super(LambdaMask, self).build(input_shape)
+
+    def call(self, x):
+        return x * self.kernel
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
