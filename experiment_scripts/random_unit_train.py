@@ -6,13 +6,13 @@ import math
 import numpy as np
 import json
 
-def percentHighestMask(array,percent_to_keep):
+def percent_highest_mask(array,percent_to_keep):
     """
     Generates a mask of same shape as 'array' with 'percent_to_keep' percent highest values in array set to one and rest set to zero.
     """
-    num_kept = math.ceil(array.size() * percent_to_keep)
+    num_kept = math.ceil(array.size * percent_to_keep)
     kept_indices = np.argpartition(array,-num_kept,axis=None)[-num_kept:]
-    mask = np.zeros((array.size()))
+    mask = np.zeros((array.size))
     mask[kept_indices] = 1
     mask = np.reshape(mask,array.shape)
     return mask
@@ -39,23 +39,23 @@ def main():
 
             # Random unit pruning
             # select random units and generate mask
-            dense_300_mask = np.zeros((dense_300_mask.size(),))
-            dense_300_mask[np.random.choice(np.arange(dense_300_mask.size()),num_kept_mask_300)] = 1
+            dense_300_mask = np.zeros((dense_300_mask.size,))
+            dense_300_mask[np.random.choice(np.arange(dense_300_mask.size),num_kept_mask_300)] = 1
             dense_300_mask.reshape(dense_300_mask.shape)
             
-            dense_100_mask = np.zeros((dense_100_mask.size(),))
-            dense_100_mask[np.random.choice(np.arange(dense_100_mask.size()),num_kept_mask_100)] = 1
+            dense_100_mask = np.zeros((dense_100_mask.size,))
+            dense_100_mask[np.random.choice(np.arange(dense_100_mask.size),num_kept_mask_100)] = 1
             dense_100_mask.reshape(dense_100_mask.shape)
 
             # create model with applied unit mask
-            model = tf.keras.Sequential(
+            model = tf.keras.Sequential([
                 tf.keras.Input(shape=(784,)),
-                tf.keras.layers.Dense(300,activation='relu'),
+                tf.keras.layers.Dense(300,activation='relu',name='dense_300'),
                 modeling.UnitMaskLayer(name='mask_300'),
-                tf.keras.layers.Dense(100,activation='relu'),
+                tf.keras.layers.Dense(100,activation='relu',name='dense_100'),
                 modeling.UnitMaskLayer(name='mask_100'),
-                tf.keras.layers.Dense(10,activation='softmax')
-            )
+                tf.keras.layers.Dense(10,activation='softmax',name='dense_10')
+            ])
             model.get_layer('mask_300').set_weight(dense_300_mask)
             model.get_layer('mask_100').set_weight(dense_100_mask)
             
@@ -76,12 +76,14 @@ def main():
                     )])
             history = history.history
             model.save('../models/trained/random_units_percent_'+str(keep_exponent)+'iteration_'+str(iteration))
-            json.dump(history,open('../histories/random_units_percent_'+str(keep_exponent)+'iteration_'+str(iteration)))
+            json.dump(history,open('../histories/random_units_percent_'+str(keep_exponent)+'iteration_'+str(iteration),'w'))
 
             best_epoch = np.argmin(history['val_loss'])
             stats.loc[len(stats)] = [iteration,'random_units',None,(num_kept_mask_300,num_kept_mask_100),best_epoch,history['val_loss'][best_epoch],history['val_accuracy'][best_epoch]]
 
-
+            del model
+            del init_model
+            gc.collect()
 
 if __name__=='__main__':
-    main()
+    main(

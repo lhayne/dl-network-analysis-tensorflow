@@ -31,25 +31,28 @@ def main():
             katz_centrality = networkx.katz_centrality(unit_graph)
             
             # generate masks
-            dense_300_centrality = [katz_centrality['dense_300.'+str(i)] for i in range(300)]
+            dense_300_centrality = np.asarray([katz_centrality['dense_300.'+str(i)] for i in range(300)])
             num_kept_mask_300 = math.ceil(len(dense_300_centrality) * percent_to_keep)
-            dense_300_mask = modeling.percentHighestMask(dense_300_centrality,percent_to_keep)
+            dense_300_mask = modeling.percent_highest_mask(dense_300_centrality,percent_to_keep)
             
-            dense_100_centrality = [katz_centrality['dense_100.'+str(i)] for i in range(100)]
+            dense_100_centrality = np.asarray([katz_centrality['dense_100.'+str(i)] for i in range(100)])
             num_kept_mask_100 = math.ceil(len(dense_100_centrality) * percent_to_keep)
-            dense_100_mask = modeling.percentHighestMask(dense_100_centrality,percent_to_keep)
+            dense_100_mask = modeling.percent_highest_mask(dense_100_centrality,percent_to_keep)
+            print('mask shape',dense_100_mask.shape)
 
             # create model with applied unit mask
-            model = tf.keras.Sequential(
+            model = tf.keras.Sequential([
                 tf.keras.Input(shape=(784,)),
-                tf.keras.layers.Dense(300,activation='relu'),
+                tf.keras.layers.Dense(300,activation='relu',name='dense_300'),
                 modeling.UnitMaskLayer(name='mask_300'),
-                tf.keras.layers.Dense(100,activation='relu'),
+                tf.keras.layers.Dense(100,activation='relu',name='dense_100'),
                 modeling.UnitMaskLayer(name='mask_100'),
-                tf.keras.layers.Dense(10,activation='softmax')
-            )
-            model.get_layer('mask_300').set_weight(dense_300_mask)
-            model.get_layer('mask_100').set_weight(dense_100_mask)
+                tf.keras.layers.Dense(10,activation='softmax',name='dense_10')
+            ])
+            model.build((784,))
+            
+            model.get_layer('mask_300').set_weights([dense_300_mask.reshape(1,-1)])
+            model.get_layer('mask_100').set_weights([dense_100_mask.reshape(1,-1)])
             
             # load initial weights
             model.get_layer('dense_300').set_weights(init_model.get_layer('dense_300').get_weights())
@@ -68,13 +71,14 @@ def main():
                     )])
             history = history.history
             model.save('../models/trained/katz_percent_'+str(keep_exponent)+'iteration_'+str(iteration))
-            json.dump(history,open('../histories/katz_percent_'+str(keep_exponent)+'iteration_'+str(iteration)))
+            json.dump(history,open('../histories/katz_percent_'+str(keep_exponent)+'iteration_'+str(iteration),'w'))
 
             best_epoch = np.argmin(history['val_loss'])
             stats.loc[len(stats)] = [iteration,'katz',None,(num_kept_mask_300,num_kept_mask_100),best_epoch,history['val_loss'][best_epoch],history['val_accuracy'][best_epoch]]
 
             del model
-            gc.clear_session()
+            del init_model
+            gc.collect()
 
 
 if __name__=='__main__':

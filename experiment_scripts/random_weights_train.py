@@ -25,30 +25,30 @@ def main():
             trained_model = tf.keras.models.load_model('../models/trained/lenet_iteration_'+str(iteration))
 
             dense_300_kernel = trained_model.get_layer('dense_300').get_weights()[0]
-            num_kept_dense_300 = math.ceil(dense_300_kernel.size() * percent_to_keep)
-            dense_300_mask = modeling.percentHighestMask(dense_300_kernel,percent_to_keep)
+            num_kept_dense_300 = math.ceil(dense_300_kernel.size * percent_to_keep)
+            dense_300_mask = modeling.percent_highest_mask(dense_300_kernel,percent_to_keep)
 
             dense_100_kernel = trained_model.get_layer('dense_100').get_weights()[0]
-            num_kept_dense_100 = math.ceil(dense_100_kernel.size() * percent_to_keep)
-            dense_100_mask = modeling.percentHighestMask(dense_100_kernel,percent_to_keep)
+            num_kept_dense_100 = math.ceil(dense_100_kernel.size * percent_to_keep)
+            dense_100_mask = modeling.percent_highest_mask(dense_100_kernel,percent_to_keep)
 
             # Random weight pruning
             # select random weights and generate mask
-            dense_300_mask = np.zeros((dense_300_kernel.size(),))
-            dense_300_mask[np.random.choice(np.arange(dense_300_kernel.size()),num_kept_dense_300)] = 1
+            dense_300_mask = np.zeros((dense_300_kernel.size,))
+            dense_300_mask[np.random.choice(np.arange(dense_300_kernel.size),num_kept_dense_300)] = 1
             dense_300_mask.reshape(dense_300_kernel.shape)
             
-            dense_100_mask = np.zeros((dense_100_kernel.size(),))
-            dense_100_mask[np.random.choice(np.arange(dense_100_kernel.size()),num_kept_dense_100)] = 1
+            dense_100_mask = np.zeros((dense_100_kernel.size,))
+            dense_100_mask[np.random.choice(np.arange(dense_100_kernel.size),num_kept_dense_100)] = 1
             dense_100_mask.reshape(dense_100_kernel.shape)
 
             # create model with applied kernel mask
-            model = tf.keras.Sequential(
+            model = tf.keras.Sequential([
                 tf.keras.Input(shape=(784,)),
-                tf.keras.layers.Dense(300,activation='relu',kernel_constraint=modeling.KernelMaskConstraint(dense_300_mask)),
-                tf.keras.layers.Dense(100,activation='relu',kernel_constraint=modeling.KernelMaskConstraint(dense_100_mask)),
-                tf.keras.layers.Dense(10,activation='softmax')
-            )
+                tf.keras.layers.Dense(300,activation='relu',name='dense_300',kernel_constraint=modeling.KernelMaskConstraint(dense_300_mask)),
+                tf.keras.layers.Dense(100,activation='relu',name='dense_100',kernel_constraint=modeling.KernelMaskConstraint(dense_100_mask)),
+                tf.keras.layers.Dense(10,activation='softmax',name='dense_10')
+            ])
 
             # load initial weights
             init_model = tf.keras.models.load_model('../models/initialized/lenet_iteration_'+str(iteration))
@@ -69,13 +69,14 @@ def main():
                     )])
             history = history.history
             model.save('../models/trained/random_weights_percent_'+str(keep_exponent)+'iteration_'+str(iteration))
-            json.dump(history,open('../histories/random_weights_percent_'+str(keep_exponent)+'iteration_'+str(iteration)))
+            json.dump(history,open('../histories/random_weights_percent_'+str(keep_exponent)+'iteration_'+str(iteration),'w'))
 
             best_epoch = np.argmin(history['val_loss'])
             stats.loc[len(stats)] = [iteration,'random_weights',(num_kept_dense_300,num_kept_dense_100),None,best_epoch,history['val_loss'][best_epoch],history['val_accuracy'][best_epoch]]
 
             del model
-            gc.clear_session()
+            del init_model
+            gc.collect()
 
 if __name__=='__main__':
     main()
