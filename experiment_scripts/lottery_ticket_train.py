@@ -61,12 +61,12 @@ def main():
             # train and save model
             model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(), 
                           optimizer=tf.keras.optimizers.Adam(learning_rate=0.0012), metrics=['accuracy'])
-            history = model.fit(x_train,y_train,validation_data=(x_test,y_test),batch_size=BATCH_SIZE,epochs=5000,steps_per_epoch=10,shuffle=True,callbacks=[
+            history = model.fit(x_train,y_train,validation_data=(x_test,y_test),batch_size=BATCH_SIZE,epochs=500,steps_per_epoch=100,shuffle=True,callbacks=[
                     tf.keras.callbacks.EarlyStopping(
                                             monitor='val_loss',
                                             mode='min',
                                             min_delta=0,
-                                            patience=1000,
+                                            patience=200,
                                             restore_best_weights=True,
                     )])
             history = history.history
