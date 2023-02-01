@@ -31,12 +31,12 @@ def main():
             dense_300_kernel = trained_model.get_layer('dense_300').get_weights()[0]
             num_kept_dense_300 = math.ceil(dense_300_kernel.size * percent_to_keep)
             dense_300_mask = modeling.percent_highest_mask(dense_300_kernel,percent_to_keep)
-            pickle.dump(dense_300_mask,open('../masks/lottery_ticket_dense_300_percent_'+str(keep_exponent)+'_iteration_'+str(iteration)+'.pkl','w')
+            pickle.dump(dense_300_mask,open('../masks/lottery_ticket_dense_300_percent_'+str(keep_exponent)+'_iteration_'+str(iteration)+'.pkl','w'))
 
             dense_100_kernel = trained_model.get_layer('dense_100').get_weights()[0]
             num_kept_dense_100 = math.ceil(dense_100_kernel.size * percent_to_keep)
             dense_100_mask = modeling.percent_highest_mask(dense_100_kernel,percent_to_keep)
-            pickle.dump(dense_100_mask,open('../masks/lottery_ticket_dense_100_percent_'+str(keep_exponent)+'_iteration_'+str(iteration)+'.pkl','w')
+            pickle.dump(dense_100_mask,open('../masks/lottery_ticket_dense_100_percent_'+str(keep_exponent)+'_iteration_'+str(iteration)+'.pkl','w'))
 
             # dense_10_kernel = trained_model.get_layer('dense_10').get_weights()[0]
             # percent_to_keep = (1/(10/9)**keep_exponent)
