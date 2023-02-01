@@ -8,6 +8,10 @@ import json
 import gc
 
 def main():
+    physical_devices = tf.config.list_physical_devices('GPU') 
+    for device in physical_devices:
+        tf.config.experimental.set_memory_growth(device, True)
+        
     BATCH_SIZE = 60
 
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()

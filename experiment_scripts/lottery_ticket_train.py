@@ -6,6 +6,7 @@ import math
 import numpy as np
 import json
 import gc
+import pickle
 
 def main():
     BATCH_SIZE = 60
@@ -19,7 +20,7 @@ def main():
     stats = pd.DataFrame([],columns=['iteration','method','num_parameters','num_units','epochs','val_loss','val_accuracy'])
 
     for iteration in range(20):
-        for keep_exponent in range(1,25):
+        for keep_exponent in range(1,20):
             percent_to_keep = (1/(5/4)**keep_exponent)
 
             # Lottery ticket
@@ -30,10 +31,12 @@ def main():
             dense_300_kernel = trained_model.get_layer('dense_300').get_weights()[0]
             num_kept_dense_300 = math.ceil(dense_300_kernel.size * percent_to_keep)
             dense_300_mask = modeling.percent_highest_mask(dense_300_kernel,percent_to_keep)
+            pickle.dump(dense_300_mask,open('../masks/lottery_ticket_dense_300_percent_'+str(keep_exponent)+'_iteration_'+str(iteration)+'.pkl','w')
 
             dense_100_kernel = trained_model.get_layer('dense_100').get_weights()[0]
             num_kept_dense_100 = math.ceil(dense_100_kernel.size * percent_to_keep)
             dense_100_mask = modeling.percent_highest_mask(dense_100_kernel,percent_to_keep)
+            pickle.dump(dense_100_mask,open('../masks/lottery_ticket_dense_100_percent_'+str(keep_exponent)+'_iteration_'+str(iteration)+'.pkl','w')
 
             # dense_10_kernel = trained_model.get_layer('dense_10').get_weights()[0]
             # percent_to_keep = (1/(10/9)**keep_exponent)
@@ -67,8 +70,8 @@ def main():
                                             restore_best_weights=True,
                     )])
             history = history.history
-            model.save('../models/trained/lottery_ticket_percent_'+str(keep_exponent)+'iteration_'+str(iteration))
-            json.dump(history,open('../histories/lottery_ticket_percent_'+str(keep_exponent)+'iteration_'+str(iteration),'w'))
+            model.save('../models/trained/lottery_ticket_percent_'+str(keep_exponent)+'_iteration_'+str(iteration))
+            json.dump(history,open('../histories/lottery_ticket_percent_'+str(keep_exponent)+'_iteration_'+str(iteration)+'.json','w'))
 
             best_epoch = np.argmin(history['val_loss'])
             stats.loc[len(stats)] = [iteration,'lottery_ticket',(num_kept_dense_300,num_kept_dense_100),None,best_epoch,history['val_loss'][best_epoch],history['val_accuracy'][best_epoch]]
