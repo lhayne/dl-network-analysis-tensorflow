@@ -5,17 +5,7 @@ import pandas as pd
 import math
 import numpy as np
 import json
-
-def percent_highest_mask(array,percent_to_keep):
-    """
-    Generates a mask of same shape as 'array' with 'percent_to_keep' percent highest values in array set to one and rest set to zero.
-    """
-    num_kept = math.ceil(array.size * percent_to_keep)
-    kept_indices = np.argpartition(array,-num_kept,axis=None)[-num_kept:]
-    mask = np.zeros((array.size))
-    mask[kept_indices] = 1
-    mask = np.reshape(mask,array.shape)
-    return mask
+import gc
 
 def main():
     BATCH_SIZE = 60
@@ -39,13 +29,13 @@ def main():
 
             # Random unit pruning
             # select random units and generate mask
-            dense_300_mask = np.zeros((dense_300_mask.size,))
+            dense_300_mask = np.zeros((300,))
             dense_300_mask[np.random.choice(np.arange(dense_300_mask.size),num_kept_mask_300)] = 1
-            dense_300_mask.reshape(dense_300_mask.shape)
-            
-            dense_100_mask = np.zeros((dense_100_mask.size,))
+            dense_300_mask = np.reshape(dense_300_mask,(1,300))
+
+            dense_100_mask = np.zeros((100,))
             dense_100_mask[np.random.choice(np.arange(dense_100_mask.size),num_kept_mask_100)] = 1
-            dense_100_mask.reshape(dense_100_mask.shape)
+            dense_100_mask = np.reshape(dense_100_mask,(1,100))
 
             # create model with applied unit mask
             model = tf.keras.Sequential([
@@ -56,8 +46,8 @@ def main():
                 modeling.UnitMaskLayer(name='mask_100'),
                 tf.keras.layers.Dense(10,activation='softmax',name='dense_10')
             ])
-            model.get_layer('mask_300').set_weight(dense_300_mask)
-            model.get_layer('mask_100').set_weight(dense_100_mask)
+            model.get_layer('mask_300').set_weights([dense_300_mask])
+            model.get_layer('mask_100').set_weights([dense_100_mask])
             
             # load initial weights
             model.get_layer('dense_300').set_weights(init_model.get_layer('dense_300').get_weights())
@@ -80,10 +70,11 @@ def main():
 
             best_epoch = np.argmin(history['val_loss'])
             stats.loc[len(stats)] = [iteration,'random_units',None,(num_kept_mask_300,num_kept_mask_100),best_epoch,history['val_loss'][best_epoch],history['val_accuracy'][best_epoch]]
+            stats.to_csv('../summary_stats/lenet_random_units.csv')
 
             del model
             del init_model
             gc.collect()
 
 if __name__=='__main__':
-    main(
+    main()
