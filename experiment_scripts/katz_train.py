@@ -25,7 +25,7 @@ def main():
     for iteration in range(20):
         for keep_exponent in range(1,25):
             percent_to_keep = (1/(5/4)**keep_exponent)
-
+            print("ITERATION",iteration,"KEEP PERCENTAGE",percent_to_keep)
             init_model = tf.keras.models.load_model('../models/initialized/lenet_iteration_'+str(iteration))
 
             # Katz unit pruning
@@ -79,7 +79,7 @@ def main():
 
             best_epoch = np.argmin(history['val_loss'])
             stats.loc[len(stats)] = [iteration,'katz',None,(num_kept_mask_300,num_kept_mask_100),best_epoch,history['val_loss'][best_epoch],history['val_accuracy'][best_epoch]]
-
+            stats.to_csv('../summary_stats/lenet_katz.csv')
             del model
             del init_model
             gc.collect()
