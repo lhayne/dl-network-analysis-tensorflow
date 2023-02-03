@@ -82,7 +82,7 @@ class KernelMaskConstraint(tf.keras.constraints.Constraint):
     binary mask of zeros and ones.
     """
     def __init__(self,mask):
-        self.mask = mask
+        self.mask = tf.convert_to_tensor(mask,dtype=tf.float32)
 
     def __call__(self, w):
         return w * self.mask

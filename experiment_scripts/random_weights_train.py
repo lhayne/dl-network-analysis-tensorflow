@@ -6,6 +6,7 @@ import math
 import numpy as np
 import json
 import gc
+import pickle
 
 def main():
     BATCH_SIZE = 60
@@ -18,7 +19,7 @@ def main():
 
     stats = pd.DataFrame([],columns=['iteration','method','num_parameters','num_units','epochs','val_loss','val_accuracy'])
 
-    for iteration in range(20):
+    for iteration in range(9,20):
         for keep_exponent in range(1,25):
             percent_to_keep = (1/(5/4)**keep_exponent)
 
@@ -26,21 +27,21 @@ def main():
 
             dense_300_kernel = trained_model.get_layer('dense_300').get_weights()[0]
             num_kept_dense_300 = math.ceil(dense_300_kernel.size * percent_to_keep)
-            dense_300_mask = modeling.percent_highest_mask(dense_300_kernel,percent_to_keep)
 
             dense_100_kernel = trained_model.get_layer('dense_100').get_weights()[0]
             num_kept_dense_100 = math.ceil(dense_100_kernel.size * percent_to_keep)
-            dense_100_mask = modeling.percent_highest_mask(dense_100_kernel,percent_to_keep)
 
             # Random weight pruning
             # select random weights and generate mask
             dense_300_mask = np.zeros((dense_300_kernel.size,))
             dense_300_mask[np.random.choice(np.arange(dense_300_kernel.size),num_kept_dense_300)] = 1
-            dense_300_mask.reshape(dense_300_kernel.shape)
-            
+            dense_300_mask = np.reshape(dense_300_mask,dense_300_kernel.shape)
+            pickle.dump(dense_300_mask,open('../masks/random_weights_dense_300_percent_'+str(keep_exponent)+'_iteration_'+str(iteration)+'.pkl','wb'))
+
             dense_100_mask = np.zeros((dense_100_kernel.size,))
             dense_100_mask[np.random.choice(np.arange(dense_100_kernel.size),num_kept_dense_100)] = 1
-            dense_100_mask.reshape(dense_100_kernel.shape)
+            dense_100_mask = np.reshape(dense_100_mask,dense_100_kernel.shape)
+            pickle.dump(dense_300_mask,open('../masks/random_weights_dense_100_percent_'+str(keep_exponent)+'_iteration_'+str(iteration)+'.pkl','wb'))
 
             # create model with applied kernel mask
             model = tf.keras.Sequential([
@@ -73,7 +74,8 @@ def main():
 
             best_epoch = np.argmin(history['val_loss'])
             stats.loc[len(stats)] = [iteration,'random_weights',(num_kept_dense_300,num_kept_dense_100),None,best_epoch,history['val_loss'][best_epoch],history['val_accuracy'][best_epoch]]
-
+            stats.to_csv('../summary_stats/lenet_random_weights_2.csv')
+            
             del model
             del init_model
             gc.collect()
