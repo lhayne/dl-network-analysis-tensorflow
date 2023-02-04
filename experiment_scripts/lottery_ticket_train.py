@@ -17,10 +17,10 @@ def main():
     x_train = x_train.astype("float32") / 255
     x_test = x_test.astype("float32") / 255
 
-    stats = pd.DataFrame([],columns=['iteration','method','num_parameters','num_units','epochs','val_loss','val_accuracy'])
+    stats = pd.DataFrame([],columns=['iteration','method','keep_percent','num_parameters','num_units','epochs','val_loss','val_accuracy'])
 
-    for iteration in range(20):
-        for keep_exponent in range(1,20):
+    for iteration in range(10):
+        for keep_exponent in range(1,25):
             percent_to_keep = (1/(5/4)**keep_exponent)
 
             # Lottery ticket
@@ -74,7 +74,7 @@ def main():
             json.dump(history,open('../histories/lottery_ticket_percent_'+str(keep_exponent)+'_iteration_'+str(iteration)+'.json','w'))
 
             best_epoch = np.argmin(history['val_loss'])
-            stats.loc[len(stats)] = [iteration,'lottery_ticket',(num_kept_dense_300,num_kept_dense_100),None,best_epoch,history['val_loss'][best_epoch],history['val_accuracy'][best_epoch]]
+            stats.loc[len(stats)] = [iteration,'lottery_ticket',percent_to_keep,(num_kept_dense_300,num_kept_dense_100),None,best_epoch,history['val_loss'][best_epoch],history['val_accuracy'][best_epoch]]
             stats.to_csv('../summary_stats/lenet_lottery_ticket.csv')
 
             del model

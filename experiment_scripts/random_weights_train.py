@@ -17,9 +17,9 @@ def main():
     x_train = x_train.astype("float32") / 255
     x_test = x_test.astype("float32") / 255
 
-    stats = pd.DataFrame([],columns=['iteration','method','num_parameters','num_units','epochs','val_loss','val_accuracy'])
+    stats = pd.DataFrame([],columns=['iteration','method','keep_percent','num_parameters','num_units','epochs','val_loss','val_accuracy'])
 
-    for iteration in range(9,20):
+    for iteration in range(10):
         for keep_exponent in range(1,25):
             percent_to_keep = (1/(5/4)**keep_exponent)
 
@@ -73,8 +73,8 @@ def main():
             json.dump(history,open('../histories/random_weights_percent_'+str(keep_exponent)+'iteration_'+str(iteration),'w'))
 
             best_epoch = np.argmin(history['val_loss'])
-            stats.loc[len(stats)] = [iteration,'random_weights',(num_kept_dense_300,num_kept_dense_100),None,best_epoch,history['val_loss'][best_epoch],history['val_accuracy'][best_epoch]]
-            stats.to_csv('../summary_stats/lenet_random_weights_2.csv')
+            stats.loc[len(stats)] = [iteration,'random_weights',percent_to_keep,(num_kept_dense_300,num_kept_dense_100),None,best_epoch,history['val_loss'][best_epoch],history['val_accuracy'][best_epoch]]
+            stats.to_csv('../summary_stats/lenet_random_weights.csv')
             
             del model
             del init_model

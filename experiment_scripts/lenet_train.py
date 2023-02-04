@@ -7,17 +7,6 @@ import math
 import json
 import gc
 
-def percentHighestMask(array,percent_to_keep):
-    """
-    Generates a mask of same shape as 'array' with 'percent_to_keep' percent highest values in array set to one and rest set to zero.
-    """
-    num_kept = math.ceil(array.size() * percent_to_keep)
-    kept_indices = np.argpartition(array,-num_kept,axis=None)[-num_kept:]
-    mask = np.zeros((array.size()))
-    mask[kept_indices] = 1
-    mask = np.reshape(mask,array.shape)
-    return mask
-
 
 def main():
     physical_devices = tf.config.list_physical_devices('GPU') 
@@ -48,13 +37,13 @@ def main():
 
     stats = pd.DataFrame([],columns=['iteration','method','num_parameters','num_units','epochs','val_loss','val_accuracy'])
 
-    for iteration in range(20):
+    for iteration in range(10):
         tf.random.set_seed(iteration)
         model = tf.keras.Sequential([
             tf.keras.Input(shape=(784,)),
-            tf.keras.layers.Dense(300,activation='relu',name='dense_300'),
-            tf.keras.layers.Dense(100,activation='relu',name='dense_100'),
-            tf.keras.layers.Dense(10,activation='softmax',name='dense_10')
+            tf.keras.layers.Dense(300,activation='relu',name='dense_300',kernel_initializer='glorot_normal'),
+            tf.keras.layers.Dense(100,activation='relu',name='dense_100',kernel_initializer='glorot_normal'),
+            tf.keras.layers.Dense(10,activation='softmax',name='dense_10',kernel_initializer='glorot_normal')
         ])
         model.build((784,))
         model.save('../models/initialized/lenet_iteration_'+str(iteration))

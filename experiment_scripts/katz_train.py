@@ -20,9 +20,9 @@ def main():
     x_train = x_train.astype("float32") / 255
     x_test = x_test.astype("float32") / 255
 
-    stats = pd.DataFrame([],columns=['iteration','method','num_parameters','num_units','epochs','val_loss','val_accuracy'])
+    stats = pd.DataFrame([],columns=['iteration','method','keep_percent','num_parameters','num_units','epochs','val_loss','val_accuracy'])
 
-    for iteration in range(20):
+    for iteration in range(10):
         for keep_exponent in range(1,25):
             percent_to_keep = (1/(5/4)**keep_exponent)
             print("ITERATION",iteration,"KEEP PERCENTAGE",percent_to_keep)
@@ -31,8 +31,10 @@ def main():
             # Katz unit pruning
             # calculate katz centrality
             digraph_model = modeling.DiGraphModel(inputs=init_model.inputs,outputs=init_model.outputs)
-            unit_graph = digraph_model.get_networkx_graph()
-            katz_centrality = networkx.katz_centrality(unit_graph)
+            unit_graph = digraph_model.get_networkx_graph(abs=True) # We want the absolute valued weights
+            edge_weights = networkx.get_edge_attributes(unit_graph,'weight')
+            assert np.alltrue(np.asarray([edge_weights[k] for k in edge_weights.keys()]) > 0)
+            katz_centrality = networkx.katz_centrality(unit_graph,weight='weight')
             
             # generate masks
             dense_300_centrality = np.asarray([katz_centrality['dense_300.'+str(i)] for i in range(300)])
@@ -78,7 +80,7 @@ def main():
             json.dump(history,open('../histories/katz_percent_'+str(keep_exponent)+'iteration_'+str(iteration),'w'))
 
             best_epoch = np.argmin(history['val_loss'])
-            stats.loc[len(stats)] = [iteration,'katz',None,(num_kept_mask_300,num_kept_mask_100),best_epoch,history['val_loss'][best_epoch],history['val_accuracy'][best_epoch]]
+            stats.loc[len(stats)] = [iteration,'katz',percent_to_keep,None,(num_kept_mask_300,num_kept_mask_100),best_epoch,history['val_loss'][best_epoch],history['val_accuracy'][best_epoch]]
             stats.to_csv('../summary_stats/lenet_katz.csv')
             del model
             del init_model
