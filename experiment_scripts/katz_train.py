@@ -76,8 +76,8 @@ def main():
                                             restore_best_weights=True,
                     )])
             history = history.history
-            model.save('../models/trained/katz_percent_'+str(keep_exponent)+'iteration_'+str(iteration))
-            json.dump(history,open('../histories/katz_percent_'+str(keep_exponent)+'iteration_'+str(iteration),'w'))
+            model.save('../models/trained/katz_percent_'+str(keep_exponent)+'_iteration_'+str(iteration))
+            json.dump(history,open('../histories/katz_percent_'+str(keep_exponent)+'_iteration_'+str(iteration)+'.json','w'))
 
             best_epoch = np.argmin(history['val_loss'])
             stats.loc[len(stats)] = [iteration,'katz',percent_to_keep,None,(num_kept_mask_300,num_kept_mask_100),best_epoch,history['val_loss'][best_epoch],history['val_accuracy'][best_epoch]]

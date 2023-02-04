@@ -69,8 +69,8 @@ def main():
                                             restore_best_weights=True,
                     )])
             history = history.history
-            model.save('../models/trained/random_weights_percent_'+str(keep_exponent)+'iteration_'+str(iteration))
-            json.dump(history,open('../histories/random_weights_percent_'+str(keep_exponent)+'iteration_'+str(iteration),'w'))
+            model.save('../models/trained/random_weights_percent_'+str(keep_exponent)+'_iteration_'+str(iteration))
+            json.dump(history,open('../histories/random_weights_percent_'+str(keep_exponent)+'_iteration_'+str(iteration)+'.json','w'))
 
             best_epoch = np.argmin(history['val_loss'])
             stats.loc[len(stats)] = [iteration,'random_weights',percent_to_keep,(num_kept_dense_300,num_kept_dense_100),None,best_epoch,history['val_loss'][best_epoch],history['val_accuracy'][best_epoch]]
