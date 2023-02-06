@@ -189,7 +189,7 @@ def selective_magnitude(activations,labels):
     selective_magnitudes (C x M array):
         average activity of each of M units for C classes
     """
-    return np.divide(np.matmul(labels.T,activations),np.sum(labels,axis=0))
+    return np.divide(np.matmul(labels.T,activations),np.sum(labels,axis=0).reshape(-1,1))
 
 def selectivity(activations,labels):
     """
