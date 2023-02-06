@@ -153,3 +153,62 @@ def percent_highest_mask(array,keep_percent,abs=True):
     mask = np.reshape(mask,array.shape)
 
     return mask
+
+
+def get_activations(model,layer_name,input):
+    """
+    Uses the functional API to construct subnetwork using inputs and outputs from part of full network,
+    passes in the input, and returns the outputs.
+
+    Courtesy of StackOverflow
+    https://stackoverflow.com/questions/66571756/how-can-you-get-the-activations-of-the-neurons-during-an-inference-in-tensorflow
+    """
+    intermediate_output = tf.keras.Model(model.input, 
+                                         model.get_layer(layer_name).output)
+    activations = intermediate_output(input)
+    tf.keras.backend.clear_session()
+    return activations
+
+
+def selective_magnitude(activations,labels):
+    """
+    Calculates average selectivity (selective magnitude)
+    for each unit given its activations.
+
+    Parameters
+    ----------
+    activations (N x M array):
+        matrix of activations for N training examples and 
+        M units
+    labels (N x C array):
+        matrix of one-hot vectors for every training example
+        indicating class label
+
+    Returns
+    -------
+    selective_magnitudes (C x M array):
+        average activity of each of M units for C classes
+    """
+    return np.divide(np.matmul(labels.T,activations),np.sum(labels,axis=0))
+
+def selectivity(activations,labels):
+    """
+    Calculates average normalized selectivity
+    for each unit given its activations.
+
+    Parameters
+    ----------
+    activations (N x M array):
+        matrix of activations for N training examples and 
+        M units
+    labels (N x C array):
+        matrix of one-hot vectors for every training example
+        indicating class label
+
+    Returns
+    -------
+    selectivities (C x M array):
+        average normalized selectivity of each of M units for C classes
+    """
+    selective_magnitudes = selective_magnitude(activations,labels)
+    return np.nan_to_num(selective_magnitudes / np.mean(selective_magnitudes,axis=0))
