@@ -30,7 +30,7 @@ def main():
             dense_300_activations = modeling.get_activations(init_model,'dense_300',x_train) # N x 300
             print(dense_300_activations.shape)
             dense_300_selectivities = modeling.selectivity(dense_300_activations,y_train_one_hot)
-            print(np.min(dense_300_selectivities),np.max(dense_300_selectivities))
+            print(np.min(dense_300_selectivities),np.max(dense_300_selectivities),dense_300_selectivities.shape)
 
             dense_100_activations = modeling.get_activations(init_model,'dense_100',x_train) # N x 100
             print(dense_100_activations.shape)
