@@ -30,11 +30,13 @@ def main():
             dense_300_activations = modeling.get_activations(init_model,'dense_300',x_train) # N x 300
             print(dense_300_activations.shape)
             dense_300_selectivities = modeling.selectivity(dense_300_activations,y_train_one_hot)
+            dense_300_selectivities = np.max(dense_300_selectivities,axis=0) # maximally selective class
             print(np.min(dense_300_selectivities),np.max(dense_300_selectivities),dense_300_selectivities.shape)
 
             dense_100_activations = modeling.get_activations(init_model,'dense_100',x_train) # N x 100
             print(dense_100_activations.shape)
             dense_100_selectivities = modeling.selectivity(dense_100_activations,y_train_one_hot) 
+            dense_100_selectivities = np.max(dense_100_selectivities,axis=0) # maximally selective class
             print(np.min(dense_100_selectivities),np.max(dense_100_selectivities))
 
             num_kept_mask_300 = math.ceil(300 * percent_to_keep)
